@@ -14,7 +14,8 @@
   install.packages("ggfortify")
   install.packages("corrplot")
   install.packages('ltm')
-
+  install.packages("janitor")
+  
   library("readxl")
   library("haven")
   library("tidyverse")
@@ -29,6 +30,7 @@
   library(ggfortify)
   library(corrplot)
   library(ltm)
+  library(janitor)
   
   #import questionnaire data ####
   data <- read_excel("~/Master 2020-21/4.5 Thesis and Internship/Data/master_thesis/IU merged ENG+NL_1187.xlsx") %>%
@@ -189,6 +191,8 @@
   
   psych::describe(descriptives1)
   
+  tabyl(descriptives1$ethnicity_code, sort = TRUE) #frequencies
+  
   count(descriptives1, ethnicity_code)
   
 #### SECTION 2: DATA SCREENING AND PRELIMINARY ANALYSES #####
@@ -216,7 +220,11 @@
   
   psych::describe(descriptives2)
   
+  tabyl(descriptives2$ethnicity_code, sort = TRUE) #frequencies
+  
   count(descriptives2, ethnicity_code)
+  
+  #tabyl(descriptives1$ethnicity_code, sort = TRUE) #frequencies
   
   #generate correlation matrix with means and SDs ####
     cor_matrix <- full_data %>%
