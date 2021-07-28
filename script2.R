@@ -15,6 +15,7 @@
   install.packages("corrplot")
   install.packages('ltm')
   install.packages("janitor")
+  install.packages("lmtest")
   
   library("readxl")
   library("haven")
@@ -31,6 +32,7 @@
   library(corrplot)
   library(ltm)
   library(janitor)
+  library(lmtest)
   
   #import questionnaire data ####
   data <- read_excel("~/Master 2020-21/4.5 Thesis and Internship/Data/master_thesis/IU merged ENG+NL_1187.xlsx") %>%
@@ -781,188 +783,150 @@ saved = mediation1(y = "STAI_T", #DV
   saved$boot.ci
   
   
-  #Moderation analyses (remove if not using, otherwise fix) ####
   
-  #moderation 1: sex moderates relationship between ERN and anxiety, ####
-  #when controlling for worry and depression! (YES!)
+  #Exploratory of Hypothesis 1: (NOT DELTA) ERN predicting STAI-T, with P-IU as mediator (without outliers)#####
   
-  full_data2 <-  full_data %>% 
-    mutate_if(is.character,as.numeric)
+  saved = mediation1(y = "STAI_T", #DV
+                     x = "ERN", #IV -- normal ERN, not the difference score!
+                     m = "P_IU",  #Mediator
+                     cvs = c("PSWQ_total", "BDI_total", "I_IU"), #Any covariates
+                     df = full_data, #Dataframe
+                     with_out = F, #Not required but can change to F for no outliers
+                     nboot = 5000, #Number of bootstraps
+                     conf_level = .95 #CI width
+  )
   
-  saved = moderation1(y = "STAI_T", #DV
-                      x = "deltaERN", #IV
-                      m = "Age", #Moderator for simple slopes
-                      cvs = c("PSWQ_total", "BDI_total", "IUS12_total"), #covariates
-                      df = full_data2, #data frame of columns
-                      with_out = F)
+  #bootstrapped indirect
+  saved$boot.results
   
-  #View the outliers
-  View(saved$datascreening$fulldata)
+  #bootstrapped CI
+  saved$boot.ci
   
-  #Additivity/multicollinearity
-  saved$datascreening$correl
+  #Exploratory of Hypothesis 2: (NOT DELTA) ERN predicting STAI-T, with I-IU mediator (without outliers)#### 
   
-  #Linearity
-  saved$datascreening$linearity
-  
-  #Normality
-  saved$datascreening$normality
-  
-  #Homogeneity + Homoscedasticity
-  saved$datascreening$homogen
-  
-  #Overall Model (Average Simple Slopes)
-  summary(saved$model1)
-  
-  #Low Simple Slope Model
-  summary(saved$model1low)
-  
-  #High Simple Slope Model
-  summary(saved$model1high)
-  
-  #Interpretation of Slopes
-  cat(saved$interpretation)
-  
-  #Graph of the Slopes
-  saved$graphslopes
-  
-  ## alternative calculation
+  saved = mediation1(y = "STAI_T", #DV
+                     x = "ERN", #IV -- normal ERN, not the difference score!
+                     m = "I_IU",  #Mediator
+                     cvs = c("PSWQ_total", "BDI_total", "P_IU"), #Any covariates
+                     df = full_data, #Dataframe
+                     with_out = F, #Not required but can change to F for no outliers
+                     nboot = 5000, #Number of bootstraps
+                     conf_level = .95 #CI width
+  )
   
 
+  #bootstrapped indirect
+  saved$boot.results
+  
+  #bootstrapped CI
+  saved$boot.ci
+  
+  
+  #Exploratory of Hypothesis 3: (NOT DELTA) ERN predicting Depression, with Total IU as mediator (without outliers)#### 
+  
+  saved = mediation1(y = "BDI_total", #DV
+                     x = "ERN", #IV -- normal ERN, not the difference score!
+                     m = "IUS12_total",  #Mediator
+                     cvs = c("PSWQ_total", "STAI_T"), #Any covariates
+                     df = full_data, #Dataframe
+                     with_out = F, #Not required but can change to F for no outliers
+                     nboot = 5000, #Number of bootstraps
+                     conf_level = .95 #CI width
+  )
+  
 
+  #bootstrapped indirect
+  saved$boot.results
   
-  #moderation 2: age moderates relationship between ERN and depression, when controlling for worry and anxiety! (NO!)####
-  
-  full_data2 <-  full_data %>% 
-    mutate_if(is.character,as.numeric)
-  
-  saved = moderation1(y = "BDI_total", #DV
-                      x = "deltaERN", #IV
-                      m = "Age", #Moderator for simple slopes
-                      cvs = c("PSWQ_total", "STAI_T"), #covariates
-                      df = full_data2, #data frame of columns
-                      with_out = F)
-  
-  #View the outliers
-  View(saved$datascreening$fulldata)
-  
-  #Additivity/multicollinearity
-  saved$datascreening$correl
-  
-  #Linearity
-  saved$datascreening$linearity
-  
-  #Normality
-  saved$datascreening$normality
-  
-  #Homogeneity + Homoscedasticity
-  saved$datascreening$homogen
-  
-  #Overall Model (Average Simple Slopes)
-  summary(saved$model1)
-  
-  #Low Simple Slope Model
-  summary(saved$model1low)
-  
-  #High Simple Slope Model
-  summary(saved$model1high)
-  
-  #Interpretation of Slopes
-  cat(saved$interpretation)
-  
-  #Graph of the Slopes
-  saved$graphslopes
+  #bootstrapped CI
+  saved$boot.ci
   
   
-  ####Hierarchical regressions ####
-  #https://rtutorialseries.blogspot.com/2009/12/r-tutorial-series-multiple-linear.html
-  #https://www.r-bloggers.com/2010/01/r-tutorial-series-hierarchical-linear-regression/
   
-  #how much extra does ERN explain in anxiety
   
-  #(model1)Predict STAI from ERN with Worry and Depression
-  three.predictor.model <- lm(STAI_T ~ PSWQ_total + BDI_total + IUS12_total, hyp1_clean)
-  summary(three.predictor.model)
   
-  #(model2)Predict STAI from ERN with worry, depression and IUS12
-  four.predictor.model <- lm(STAI_T ~ deltaERN + PSWQ_total + BDI_total + IUS12_total, hyp1_clean)
-  summary(four.predictor.model)
   
-  #(compare model1 and 2, see if model 2 adds anything)
-  anova(three.predictor.model, four.predictor.model)
   
-  difference!
-    
-    #how much extra does ERN explain in depression
-    
-    #(model1)Predict BDI from Worry and Trait Anxiety and IU
-    three.predictor.model <- lm(BDI_total ~ PSWQ_total + STAI_T + IUS12_total, hyp1_clean)
-  summary(three.predictor.model)
+#Exploratory 8: ERN on anxiety, via total IU only ####
+
+  saved = mediation1(y = "STAI_T", #DV
+                     x = "deltaERN", #IV -- normal ERN, not the difference score!
+                     m = "IUS12_total",  #Mediator
+                     cvs = c(), #Any covariates
+                     df = full_data, #Dataframe
+                     with_out = F, #Not required but can change to F for no outliers
+                     nboot = 5000, #Number of bootstraps
+                     conf_level = .95 #CI width
+  )
   
-  #(model2)Addition of ERN to model
-  four.predictor.model <- lm(BDI_total ~ deltaERN + PSWQ_total + STAI_T + IUS12_total, hyp1_clean)
-  summary(four.predictor.model)
+  #bootstrapped indirect
+  saved$boot.results
   
-  #(compare model1 and 2, see if model 2 adds anything)
-  anova(three.predictor.model, four.predictor.model)
+  #bootstrapped CI
+  saved$boot.ci
   
-  #no difference
   
-  #subtypes as predictors for anxiety
+#Exploratory 9: ERN on depression, via total IU only    ####
+
+  saved = mediation1(y = "BDI_total", #DV
+                     x = "deltaERN", #IV -- normal ERN, not the difference score!
+                     m = "IUS12_total",  #Mediator
+                     cvs = c(), #Any covariates
+                     df = full_data, #Dataframe
+                     with_out = F, #Not required but can change to F for no outliers
+                     nboot = 5000, #Number of bootstraps
+                     conf_level = .95 #CI width
+  )
   
-  #(model1)Predict STAI from ERN with Worry and Depression
-  three.predictor.model <- lm(STAI_T ~ PSWQ_total + BDI_total + I_IU + P_IU, hyp1_clean)
-  summary(three.predictor.model)
+  #bootstrapped indirect
+  saved$boot.results
   
-  #(model2)Predict STAI from ERN with worry, depression and IUS12
-  four.predictor.model <- lm(STAI_T ~ deltaERN + PSWQ_total + BDI_total + I_IU + P_IU, hyp1_clean)
-  summary(four.predictor.model)
+  #bootstrapped CI
+  saved$boot.ci
   
-  #(compare model1 and 2, see if model 2 adds anything)
-  anova(three.predictor.model, four.predictor.model)
   
-  #no difference
+#Exploratory 10: ERN on anxiety, via worry only     ####
   
-  #how much does IUS add on top of anxiety
+  saved = mediation1(y = "STAI_T", #DV
+                     x = "deltaERN", #IV -- normal ERN, not the difference score!
+                     m = "PSWQ_total",  #Mediator
+                     cvs = c(), #Any covariates
+                     df = full_data, #Dataframe
+                     with_out = F, #Not required but can change to F for no outliers
+                     nboot = 5000, #Number of bootstraps
+                     conf_level = .95 #CI width
+  )
   
-  #(model1)Predict STAI from ERN with Worry and Depression
-  three.predictor.model <- lm(STAI_T ~ PSWQ_total + BDI_total + deltaERN, hyp1_clean)
-  summary(three.predictor.model)
+  #bootstrapped indirect
+  saved$boot.results
   
-  #(model2)Predict STAI from ERN with worry, depression and IUS12
-  four.predictor.model <- lm(STAI_T ~ PSWQ_total + BDI_total + deltaERN + IUS12_total, hyp1_clean)
-  summary(four.predictor.model)
+  #bootstrapped CI
+  saved$boot.ci
   
-  #(compare model1 and 2, see if model 2 adds anything)
-  anova(three.predictor.model, four.predictor.model)  
   
-  #no difference
+#Exploratory 11: ERN on depression, via worry only     ####
+
+  saved = mediation1(y = "BDI_total", #DV
+                     x = "deltaERN", #IV -- normal ERN, not the difference score!
+                     m = "PSWQ_total",  #Mediator
+                     cvs = c(), #Any covariates
+                     df = full_data, #Dataframe
+                     with_out = F, #Not required but can change to F for no outliers
+                     nboot = 5000, #Number of bootstraps
+                     conf_level = .95 #CI width
+  )
   
-  #how much does IUS add on top of depression
+  #bootstrapped indirect
+  saved$boot.results
   
-  #(model1)Predict STAI from ERN with Worry and Depression
-  three.predictor.model <- lm(BDI_total ~ PSWQ_total + STAI_T + deltaERN, hyp1_clean)
-  summary(three.predictor.model)
+  #bootstrapped CI
+  saved$boot.ci
   
-  #(model2)Predict STAI from ERN with worry, depression and IUS12
-  four.predictor.model <- lm(BDI_total ~ PSWQ_total + STAI_T + deltaERN + IUS12_total, hyp1_clean)
-  summary(four.predictor.model)
   
-  #(compare model1 and 2, see if model 2 adds anything)
-  anova(three.predictor.model, four.predictor.model)  
   
-  #no difference
-  
-  #how much variation does trait anxiety explain in depression and vice versa
-  
-  model_200 <- lm(formula = BDI_total ~ STAI_T , data = hyp1_clean)
-  summary(model_200)
-  
-  model_300 <- lm(formula = STAI_T ~ BDI_total, data = hyp1_clean)
-  summary(model_300)
-  
-  #composite score for anxious-depression ####
-  #standardize and then average
+
+#Exploratory internalizing ####
+  #standardize BDI-II and STAI-T and then average
   
   full_data_standardized <- full_data %>% 
     mutate(zdep = (BDI_total - mean(BDI_total)) / sd(BDI_total)) %>% 
@@ -974,7 +938,7 @@ saved = mediation1(y = "STAI_T", #DV
     saved = mediation1(y = "z_anxdep", #DV
                        x = "deltaERN", #IV
                        m = "IUS12_total",  #Mediator
-                       cvs = c(), #Any covariates
+                       cvs = c("PSWQ_total"), #Any covariates
                        df = full_data_standardized, #Dataframe
                        with_out = F, #Not required but can change to F for no outliers
                        nboot = 5000, #Number of bootstraps
@@ -1018,10 +982,8 @@ saved = mediation1(y = "STAI_T", #DV
     ####view the analysis
     
     summary(saved$model1) #c path
-    #deltaERN  b=  -0.28592   se= 0.12697 t= -2.252  p = 0.0257 *
     
     summary(saved$model2) #a path
-    #
     
     summary(saved$model3) #b and c' path
     
@@ -1040,9 +1002,86 @@ saved = mediation1(y = "STAI_T", #DV
   
   
     
+    
+
 #### SECTION 4: REGRESSION ANALYSES ####
+    
+    #### #Exploratory Hierarchical regressions ####
+    
+    #how much extra does ERN explain in anxiety ####
+    
+    #(model1)Predict STAI from ERN with Worry and Depression
+    three.predictor.model <- lm(STAI_T ~ PSWQ_total + BDI_total + IUS12_total, hyp1_clean)
+    summary(three.predictor.model)
+    
+    #(model2)Predict STAI from ERN with worry, depression and IUS12
+    four.predictor.model <- lm(STAI_T ~ deltaERN + PSWQ_total + BDI_total + IUS12_total, hyp1_clean)
+    summary(four.predictor.model)
+    
+    #(compare model1 and 2, see if model 2 adds anything)
+    anova(three.predictor.model, four.predictor.model)
+    
+    autoplot(four.predictor.model, which=c(1,2,3), ncol = 3)  #assumption testing plots for Step 2, 
+    #homoscedasticity violated?
+    
+    bptest(four.predictor.model) #test for violation of heteroscedasticity -- actually no heteroscedasticity is present!
+    
+    #how much extra does ERN explain in depression ####
+    
+    #(model1)Predict BDI from Worry and Trait Anxiety and IU
+    three.predictor.model <- lm(BDI_total ~ PSWQ_total + STAI_T + IUS12_total, hyp1_clean)
+    summary(three.predictor.model)
+    
+    #(model2)Addition of ERN to model
+    four.predictor.model <- lm(BDI_total ~ deltaERN + PSWQ_total + STAI_T + IUS12_total, hyp1_clean)
+    summary(four.predictor.model)
+    
+    #(compare model1 and 2, see if model 2 adds anything)
+    anova(three.predictor.model, four.predictor.model)
+    
+    #no difference
+    
+    #how much does IUS add on top of anxiety ####
+    
+    #(model1)Predict STAI from ERN with Worry and Depression
+    three.predictor.model <- lm(STAI_T ~ PSWQ_total + BDI_total + deltaERN, hyp1_clean)
+    summary(three.predictor.model)
+    
+    #(model2)Predict STAI from ERN with worry, depression and IUS12
+    four.predictor.model <- lm(STAI_T ~ PSWQ_total + BDI_total + deltaERN + IUS12_total, hyp1_clean)
+    summary(four.predictor.model)
+    
+    #(compare model1 and 2, see if model 2 adds anything)
+    anova(three.predictor.model, four.predictor.model)  
+    
+    #no difference
+    
+    #how much does IUS add on top of depression ####
+    
+    #(model1)Predict STAI from ERN with Worry and Depression
+    three.predictor.model <- lm(BDI_total ~ PSWQ_total + STAI_T + deltaERN, hyp1_clean)
+    summary(three.predictor.model)
+    
+    #(model2)Predict STAI from ERN with worry, depression and IUS12
+    four.predictor.model <- lm(BDI_total ~ PSWQ_total + STAI_T + deltaERN + IUS12_total, hyp1_clean)
+    summary(four.predictor.model)
+    
+    #(compare model1 and 2, see if model 2 adds anything)
+    anova(three.predictor.model, four.predictor.model)  
+    
+    #no difference
+    
+    #how much variation does trait anxiety explain in depression and vice versa
+    
+    model_200 <- lm(formula = BDI_total ~ STAI_T , data = hyp1_clean)
+    summary(model_200)
+    
+    model_300 <- lm(formula = STAI_T ~ BDI_total, data = hyp1_clean)
+    summary(model_300)
+    
+    
   
-#1) ERN from P-IU and I-IU
+    #Hypothesis 4+5: ERN from P-IU and I-IU ####
     
     boxplot.stats(full_data$ERN)$out  #screen for univariate ERP outliers as per Jackson
     
@@ -1062,7 +1101,7 @@ saved = mediation1(y = "STAI_T", #DV
     
     summary(model_ERNIU)
     
-#1a) followup deltaERN from P-IU and I-IU
+    #followup deltaERN from P-IU and I-IU ####
     
     boxplot.stats(full_data$deltaERN)$out  #screen for univariate ERP outliers as per Jackson
     
@@ -1081,7 +1120,7 @@ saved = mediation1(y = "STAI_T", #DV
     
     summary(model_ERNIU2)    
     
-#2a) av post-error RT from IU subtypes
+    #Hypothesis 6+7: av post-error RT from IU subtypes ####
     
     model_PESIU <- lm(Mean_PE ~ P_IU + I_IU, full_data)    #model without outliers
     
