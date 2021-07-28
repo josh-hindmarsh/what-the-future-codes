@@ -1078,9 +1078,17 @@ saved = mediation1(y = "STAI_T", #DV
     
     model_300 <- lm(formula = STAI_T ~ BDI_total, data = hyp1_clean)
     summary(model_300)
-    
-    
   
+    #unique contribution of ERN after controlling for and worry ####
+    
+  model5 <- lm(IUS12_total ~ PSWQ_total, data= hyp1_clean)
+  summary(model5)
+
+  model6 <- lm(IUS12_total ~ PSWQ_total + deltaERN, data= hyp1_clean)
+  summary(model6)
+  
+  anova(model5, model6)
+    
     #Hypothesis 4+5: ERN from P-IU and I-IU ####
     
     boxplot.stats(full_data$ERN)$out  #screen for univariate ERP outliers as per Jackson
@@ -1101,7 +1109,7 @@ saved = mediation1(y = "STAI_T", #DV
     
     summary(model_ERNIU)
     
-    #followup deltaERN from P-IU and I-IU ####
+    #followup: deltaERN from P-IU and I-IU ####
     
     boxplot.stats(full_data$deltaERN)$out  #screen for univariate ERP outliers as per Jackson
     
@@ -1129,6 +1137,14 @@ saved = mediation1(y = "STAI_T", #DV
     summary(model_PESIU)
     
 
+    #IUS12 predicting BDI ####
+    model <- lm(BDI_total ~ IUS12_total, hyp1_clean)
+    summary(model)
+    
+    #IUS12 predicting STAI-T   ####
+    model <- lm(STAI_T ~ IUS12_total, hyp1_clean)
+    summary(model)
+    
 #### SECTION 5: PLOTS ####
 
   #import EEG wave data #### 
