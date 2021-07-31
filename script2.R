@@ -197,6 +197,7 @@
   
   count(descriptives1, ethnicity_code)
   
+  
 #### SECTION 2: DATA SCREENING AND PRELIMINARY ANALYSES #####
 
   #run exclusion criteria####
@@ -433,6 +434,7 @@
     #95 percent confidence interval: 2.74, 3.71
 
     
+    
 #### SECTION 3: MEDIATION ANALYSES ####
 
 
@@ -567,9 +569,17 @@ saved = mediation1(y = "STAI_T", #DV
   #fake regression to get assumption chart
   
   model3 <- 
-    lm(BDI_total ~ deltaERN + IUS12_total + PSWQ_total, data=hyp2_clean)
+    lm(BDI_total ~ deltaERN + IUS12_total + PSWQ_total, data=hyp3_clean)
   
   autoplot(model3, which=c(1,2,3), ncol = 3)    #assumptions can be checked with this output
+  
+  bptest(model3)
+  
+  #more assumption tests for depression as DV (with less variables)
+  
+  model <- lm(BDI_total ~ IUS12_total, data=hyp3_clean)
+  autoplot(model)
+  
   
   #additivity
   saved$datascreening$correl
@@ -596,6 +606,7 @@ saved = mediation1(y = "STAI_T", #DV
   
   #bootstrapped CI
   saved$boot.ci
+  
   
   
 #### SECTION 4: EXPLORATORY ANALYSES ####
@@ -1004,9 +1015,11 @@ saved = mediation1(y = "STAI_T", #DV
     
     
 
-#### SECTION 4: REGRESSION ANALYSES ####
+
+#### SECTION 5: REGRESSION ANALYSES ####
     
-    #### #Exploratory Hierarchical regressions ####
+    
+  #### #Exploratory Hierarchical regressions ####
     
     #how much extra does ERN explain in anxiety ####
     
@@ -1089,7 +1102,8 @@ saved = mediation1(y = "STAI_T", #DV
   
   anova(model5, model6)
     
-    #Hypothesis 4+5: ERN from P-IU and I-IU ####
+    
+  #Hypothesis 4+5: ERN from P-IU and I-IU ####
     
     boxplot.stats(full_data$ERN)$out  #screen for univariate ERP outliers as per Jackson
     
@@ -1128,7 +1142,8 @@ saved = mediation1(y = "STAI_T", #DV
     
     summary(model_ERNIU2)    
     
-    #Hypothesis 6+7: av post-error RT from IU subtypes ####
+    
+  #Hypothesis 6+7: av post-error RT from IU subtypes ####
     
     model_PESIU <- lm(Mean_PE ~ P_IU + I_IU, full_data)    #model without outliers
     
@@ -1137,15 +1152,21 @@ saved = mediation1(y = "STAI_T", #DV
     summary(model_PESIU)
     
 
-    #IUS12 predicting BDI ####
-    model <- lm(BDI_total ~ IUS12_total, hyp1_clean)
-    summary(model)
     
-    #IUS12 predicting STAI-T   ####
-    model <- lm(STAI_T ~ IUS12_total, hyp1_clean)
-    summary(model)
     
-#### SECTION 5: PLOTS ####
+  #Simple regressions ####
+      #IUS12 predicting BDI ####
+      model <- lm(BDI_total ~ IUS12_total, hyp1_clean)
+      summary(model)
+      
+      #subtypes predicting STAI-T   ####
+      model <- lm(STAI_T ~ P_IU, hyp1_clean)
+      summary(model)
+    
+      model <- lm(STAI_T ~ I_IU, hyp1_clean)
+      summary(model)
+      
+#### SECTION 6: PLOTS ####
 
   #import EEG wave data #### 
   #(export GA node as generic data after upsampling to 1000Hz -- will explain)
