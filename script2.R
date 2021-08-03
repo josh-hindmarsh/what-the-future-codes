@@ -516,6 +516,8 @@ saved = mediation1(y = "STAI_T", #DV
   
   autoplot(model2, which=c(1,2,3), ncol = 3)    #assumptions can be checked with this output
   
+  bptest(model2)
+  
   #additivity
   saved$datascreening$correl
   
